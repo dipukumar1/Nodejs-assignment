@@ -1,0 +1,172 @@
+const userModel=require("../models/userModel")
+const jwt = require("jsonwebtoken");
+
+const isValidRequestBody = function (requestBody) {
+    return Object.keys(requestBody).length > 0;
+  };
+
+  
+  const isValid = function (value) {
+    if (typeof value === "undefined" || value === null) return false;
+    if (typeof value !== "string") return false;
+    if (typeof value === "string" && value.trim().length == 0) return false;
+  
+    return true;
+  };
+
+  
+  const isvalidEmail = function (gmail) {
+    let regex = /^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/; //.test(gmail);
+    return regex.test(gmail);
+  };
+
+  
+  let isValidPassword=function(password){
+      let regexPassword=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/
+      return regexPassword.test(password);
+  }
+
+  
+
+
+const createUser = async function (req, res) {
+  try {
+    const requestbody = req.body;
+    const { name, email, password,} = requestbody;
+ console.log(name)
+ console.log(email)
+ console.log(password)
+
+    if (!isValidRequestBody(requestbody)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Please Provide Information" });
+    }
+    
+    if (!isValid(name)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "name is required" });
+    }
+
+
+    if (!isValid(email)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "email id is required" });
+    }
+
+
+    if (!isvalidEmail(email)) {
+      return res.status(400).send({
+        status: false,
+        message: "Please enter the valid email Example: example12@.gmail.com ",
+      });
+    }
+
+    const checkEmail = await userModel.findOne({ email: email });
+    console.log(checkEmail)
+    if (checkEmail) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Email is already exist" });
+    }
+
+    if (!isValid(password)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Password is required" });
+    }
+
+    if (!isValidPassword(password))
+      return res.status(400).send({
+        status: false,
+        msg: `Password:|${password}| must includes special character[@$!%?&], one uppercase, one lowercase, one number and should be mimimum 8 to 15 characters long| example: Example@12`,
+      });
+
+   
+
+    const userData = await userModel.create(requestbody);
+    console.log(userData)
+    return res.status(201).send({
+      status: true,
+      message: "sucessfully saved",
+      data: userData
+    });
+
+
+  } catch (err) {
+    return res.status(500).send({ status: false, message: err.message });
+  }
+};
+
+
+const loginUser = async function (req, res) {
+    try { 
+
+      let data = req.body;
+      let email = data.email;
+      let password = data.password;
+  
+      if (!isValid(email)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "email id is required" });
+      }
+  
+      if (!isvalidEmail(email)) {
+        return res
+          .status(400)
+          .send({
+            status: false,
+            message:
+              "Please enter the valid email  Example: example12@.gmail.com ",
+          });
+      }
+  
+      if (!isValid(password)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "password is required" });
+      }
+  
+      if (!isValidPassword(password))
+        return res.status(400).send({
+          status: false,
+          msg: `Password:|${password}| must includes special character[@$!%?&], one uppercase, one lowercase, one number and should be mimimum 8 to 15 characters long for example: Example@12`,
+        });
+  
+      const checkEmail = await userModel.findOne({
+        email: email,
+        password: password,
+        isDeleted: false,
+      });
+      if (!checkEmail) {
+        return res
+          .status(404)
+          .send({ status: false, message: "given User data not Found " });
+      }
+  
+      let token = jwt.sign(
+        {
+          userId: checkEmail._id.toString(),
+          System: "Book Management",
+          organisation: "BooksWorld",
+        },
+
+        "Secretkey",
+    
+      );
+  
+      res.setHeader("x-api-key", token);
+      res
+        .status(200)
+        .send({ status: true, message: "author login successfuly", data: token });
+    } catch (err) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  };
+  
+  module.exports = { createUser, loginUser }
+
+ 

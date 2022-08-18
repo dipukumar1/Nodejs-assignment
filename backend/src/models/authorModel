@@ -1,0 +1,21 @@
+const mongoose =require("mongoose");
+
+const authorSchema =new mongoose.Schema({
+
+Name:{
+    type:String,
+    required:true,
+    trim:true
+
+},
+Age:{
+    type:Number,
+    required:true
+},
+DateofBirth:{
+   type:String, 
+
+},
+
+},{timestamps:true})
+module.exports = mongoose.model('author',authorSchema)

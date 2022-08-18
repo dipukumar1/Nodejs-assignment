@@ -1,0 +1,86 @@
+const bookModel =require("../models/booksModel")
+const authorModel = require("../models/authorModel")
+
+
+const createBook = async function(req, res){
+
+    try{ 
+
+        const book=req.body;
+
+        const{authorId} =req.body
+
+        const author = await authorModel.findById(authorId);
+
+        if (!author) {
+          return res
+            .status(400)
+            .send({ status: true, message: "User does not exist" });
+        }
+
+    
+        let bookCreated = await bookModel.create(book)
+            console.log(bookCreated )
+            
+            return res.status(201).send({status:true,message:"sucessfully created" ,data: bookCreated })
+
+    }catch(err){
+        return res.status(500).send({status:false,message:"server error"})
+    }
+
+
+}
+
+
+let getBookbyauthor = async function (req, res) {
+    try {
+        let authorName = req.query.authorName;
+        const dataTobePresented = await authorModel.findOne({ Name: authorName })
+        console.log(dataTobePresented)
+
+        if (!dataTobePresented) {
+            return res.status(404).send({ status: false, message: "this author not found..." })
+        }
+        let authorId = dataTobePresented._id
+        let bookDetails = await bookModel.find({ authorId: authorId }).select({ Name: 1})
+        console.log(bookDetails)
+        res.status(200).send({
+            status: true,
+            data: {
+                Name: dataTobePresented.Name,
+                bookDetails: bookDetails
+            }
+        })
+
+    } catch (err) {
+        return res.status(500).send({ status: false, message: err.message })
+    }
+}
+
+
+
+const deletedBook = async function(req,res){
+
+try{
+   
+      const bookId = req.params.bookId;
+      console.log(bookId)
+
+    const delProduct = await bookModel.findOneAndUpdate({_id:bookId,isDeleted:false},{isDeleted:true},{new:true});
+    if(!delProduct){
+        return res.status(404).send({status:false,message:"product is already deleted"})
+    }
+    return res.status(200).send({status:true,message:"book is deleted",data: delProduct})
+
+
+
+
+}catch(err){
+    return res.status(500).send({status:false,message:"server error"})
+}
+
+
+
+}
+
+module.exports= { createBook, getBookbyauthor, deletedBook }

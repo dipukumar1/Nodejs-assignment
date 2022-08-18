@@ -1,0 +1,39 @@
+const mongoose =require("mongoose");
+const ObjectId = mongoose.Schema.Types.ObjectId;
+
+
+const bookSchema =new mongoose.Schema({
+
+Name:{
+    type:String,
+    required:true,
+    trim:true
+
+},
+
+Publishedon:{
+    type:String,
+    required:true,
+    trim:true
+},
+
+authorId:{
+    type: ObjectId,
+    ref: "author",
+    required: true,
+    trim: true,
+  },
+
+price:{
+   type:Number,
+
+},
+
+isDeleted: {
+    type:Boolean, 
+    default:false
+},
+
+
+},{timestamps:true})
+module.exports = mongoose.model('book',bookSchema)
